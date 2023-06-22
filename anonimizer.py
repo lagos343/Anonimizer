@@ -1,5 +1,5 @@
 #importamos las pantallas
-import Pantallas.principal as prin
+import Pantallas.interfaz_grafica as prin
 
 #creamos una instancia de el home form
 hm = prin.principal()
