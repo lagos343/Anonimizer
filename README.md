@@ -11,3 +11,11 @@ Install the library from the terminal with the following command.
 ```sh
 pip install customtkinter
 ```
+
+For read the Excel Sheets requires [Pandas](https://pandas.pydata.org/)
+
+Install the library from the terminal with the following command.
+
+```sh
+pip install pandas
+```
