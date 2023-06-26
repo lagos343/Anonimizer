@@ -23,6 +23,22 @@ class principal:
         self.root.geometry("600x500")
         self.root.resizable(False, False)  # no permite redimensionar
 
+        #seccion de escoger archivo        
+        self.interfaz_escoger_archivo()
+        
+        # seccion lista de las columnas
+        self.interfaz_columnas_lista()
+
+        #comprobacion especial por si regresamos de la ventana de vista previa
+        if path != "":
+            self.entrada.insert(0, path)
+            self.escoger_archivo()
+        
+        # Bucle de ejecución
+        self.root.mainloop()
+        
+    #prod que creara la interfaz para escoger archivo
+    def interfaz_escoger_archivo(self):
         # añadimos el contenido de esta ventana
         self.marco = ctk.CTkFrame(self.root)
         self.marco.pack(padx=10, pady=10)
@@ -55,22 +71,25 @@ class principal:
         self.boton_vista_previa = ctk.CTkButton(self.marco, text="Cargar vista previa del archivo", command=lambda: self.abrir_vista_previa(
         ), width=560, state="disabled")
         self.boton_vista_previa.grid(row=4, column=0, columnspan=3, pady="10")
-        
-        # fin de la parte de escoger el archivo
 
-        #comprobacion especial por si regresamos de la ventana de vista previa
-        if path != "":
-            self.entrada.insert(0, path)
-            self.escoger_archivo()
+    def interfaz_columnas_lista(self):
+    
+        #marco que tendra la lista
+        self.marco_columnas = ctk.CTkFrame(self.root)
+        self.marco_columnas.pack(padx=10, pady=10)
         
-        # Bucle de ejecución
-        self.root.mainloop()
-
+        # widget que permite el sclor por si la lista supera el tamaño
+        self.scrollable_frame = ctk.CTkScrollableFrame(
+            self.marco_columnas, width=560, fg_color="transparent", orientation="vertical")
+        self.scrollable_frame.pack( expand=True)
+        
     # prod para limpiar la ruta
     def limpiar_ruta(self):
         self.entrada.delete(0, ctk.END)
+        self.boton_vista_previa.configure(state="disabled")
+        self.label_resul_archivo.configure(text="")
+        
     # prod para escoger el archivo
-
     def escoger_archivo(self):
         self.path = self.entrada.get()
 
@@ -102,6 +121,7 @@ class principal:
                 self.entrada.focus()
                 self.boton_vista_previa.configure(state="disabled")
 
+    #prod que abrira la vista previa
     def abrir_vista_previa(self):
         self.root.destroy()
         vp = vistaPrevia(data=self.dataframe, cabeceras=self.nombres_columnas,
