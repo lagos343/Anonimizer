@@ -12,10 +12,19 @@ Install the library from the terminal with the following command.
 pip install customtkinter
 ```
 
-For read the Excel Sheets requires [Pandas](https://pandas.pydata.org/)
+For read the Excel Sheets requires [Pandas](https://pandas.pydata.org/) and [OpenPyXl](https://openpyxl.readthedocs.io/en/stable/#)
 
-Install the library from the terminal with the following command.
+Install the librarys from the terminal with the followings command.
 
 ```sh
 pip install pandas
+pip install openpyxl
+```
+
+For interact with the commads of OS, it need the library [tkinterdnd2](https://pypi.org/project/tkinterdnd2/) 
+
+for installing the library use de folliwing commad.
+
+```sh
+pip install tkinterdnd2
 ```

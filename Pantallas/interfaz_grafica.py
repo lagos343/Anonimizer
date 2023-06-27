@@ -1,3 +1,4 @@
+from tkinter import filedialog 
 import customtkinter as ctk
 import pandas as pd
 import threading
@@ -20,7 +21,7 @@ class principal:
         # creacion de la ventana principal
         self.root = ctk.CTk()
         self.root.title("Anonimizer - Grupo #3")
-        self.root.geometry("600x500")
+        self.root.geometry("600x600")
         self.root.resizable(False, False)  # no permite redimensionar
 
         #seccion de escoger archivo        
@@ -49,12 +50,12 @@ class principal:
                      anchor="w", padx="10").grid(row=1, column=0, columnspan=3)
 
         # aca ingresaremos la ruta
-        self.entrada = ctk.CTkEntry(self.marco, width=380)
+        self.entrada = ctk.CTkEntry(self.marco, width=380, state="disabled")
         self.entrada.grid(row=2, column=0)
 
         # boton para comprobar que exista el archivo
         self.boton_envio = ctk.CTkButton(
-            self.marco, text="Comprobar", command=lambda: self.escoger_archivo(), width=60)
+            self.marco, text="Buscar.......", command=lambda: self.abrir_archivo(), width=60)
         self.boton_envio.grid(row=2, column=1)
 
         # boton para comprobar que exista el archivo
@@ -72,23 +73,45 @@ class principal:
         ), width=560, state="disabled")
         self.boton_vista_previa.grid(row=4, column=0, columnspan=3, pady="10")
 
+    #prod que creara la interfaz para la lista de columnas
     def interfaz_columnas_lista(self):
     
         #marco que tendra la lista
         self.marco_columnas = ctk.CTkFrame(self.root)
         self.marco_columnas.pack(padx=10, pady=10)
+
+        #titulo de la seccion
+        ctk.CTkLabel(self.marco_columnas, text="Columnas a Anonimizar", width=580,
+                     anchor="w", padx="10", pady="10").pack()
         
         # widget que permite el sclor por si la lista supera el tamaño
         self.scrollable_frame = ctk.CTkScrollableFrame(
-            self.marco_columnas, width=560, fg_color="transparent", orientation="vertical")
-        self.scrollable_frame.pack( expand=True)
+            self.marco_columnas, width=560, fg_color="transparent", orientation="vertical", border_color="SlateGray", border_width=2)
+        self.scrollable_frame.pack( expand=True, padx=10, pady=10)
         
+    #prod de la seccion donde aplicaremos la tecnica de anonimizacion
+    def interfaz_secion_anonimizacion(self):
+        #marco que tendra la lista
+        self.marco_prin_anonimizacion = ctk.CTkFrame(self.root)
+        self.marco_prin_anonimizacion.pack(padx=10, pady=10)
+
     # prod para limpiar la ruta
     def limpiar_ruta(self):
         self.entrada.delete(0, ctk.END)
         self.boton_vista_previa.configure(state="disabled")
         self.label_resul_archivo.configure(text="")
         
+    #abrir dialogo
+    def abrir_archivo(self):
+        archivo = filedialog.askopenfilename(title="Buscar Archivo")
+        if archivo != "" and archivo != None:
+            self.limpiar_ruta()
+            self.entrada.insert(0, archivo)
+            self.escoger_archivo()
+        else:
+            self.label_resul_archivo.configure(
+                text="No se escogio ningun archivo", text_color="red")
+
     # prod para escoger el archivo
     def escoger_archivo(self):
         self.path = self.entrada.get()
@@ -131,8 +154,10 @@ class principal:
 
 
 class vistaPrevia:
+    
     nombre_archivo = ""
     path = ""
+
     def __init__(self, data, cabeceras, path):
         # obtenemos el nombre del archivo
         self.path = path
