@@ -32,8 +32,10 @@ class principal:
 
         #comprobacion especial por si regresamos de la ventana de vista previa
         if path != "":
+            self.entrada.configure(state="normal")
             self.entrada.insert(0, path)
             self.escoger_archivo()
+            self.entrada.configure(state="disabled")
         
         # Bucle de ejecución
         self.root.mainloop()
@@ -105,9 +107,11 @@ class principal:
     def abrir_archivo(self):
         archivo = filedialog.askopenfilename(title="Buscar Archivo")
         if archivo != "" and archivo != None:
-            self.limpiar_ruta()
+            self.entrada.configure(state="normal")
+            self.limpiar_ruta()            
             self.entrada.insert(0, archivo)
             self.escoger_archivo()
+            self.entrada.configure(state="disabled")
         else:
             self.label_resul_archivo.configure(
                 text="No se escogio ningun archivo", text_color="red")
@@ -220,7 +224,7 @@ class vistaPrevia:
                 valor = str(self.data.iloc[i, j])
 
                 # Utilizar el método 'after' para que la creación de los cuadros de texto se realice en el hilo principal
-                self.root.after(0, self.crear_cuadro_texto, valor, i+1, j)
+                self.crear_cuadro_texto(valor, i+1, j)
 
         # Indicar que las etiquetas ya se han creado
         self.etiquetas_creadas = True
