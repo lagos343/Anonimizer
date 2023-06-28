@@ -10,8 +10,11 @@ ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
 
 # clase que crea la pantalla principal
+
+
 class principal:
 
+    columnas_selecionadas = []
     path = ""  # ruta de donde se extraera el archivo con la informacion
     nombres_columnas = []  # contendra las cabeceras de la hoja de calculo
     dataframe = pd.DataFrame()  # contendra la data extraida de la hoja de calculo
@@ -28,8 +31,8 @@ class principal:
 
         # seccion lista de las columnas
         self.interfaz_columnas_lista()
-        
-        #seccion de anonimizacion
+
+        # seccion de anonimizacion
         self.interfaz_secion_anonimizacion()
 
         # comprobacion especial por si regresamos de la ventana de vista previa
@@ -89,9 +92,9 @@ class principal:
                      anchor="w", padx="10", pady="10").pack()
 
         # widget que permite el sclor por si la lista supera el tamaño
-        self.scrollable_frame = ctk.CTkScrollableFrame(
+        self.scrollable_frame_columnas = ctk.CTkScrollableFrame(
             self.marco_columnas, width=560, height=100, fg_color="transparent", orientation="vertical", border_color="SlateGray", border_width=2)
-        self.scrollable_frame.pack(expand=True, padx=10, pady=10)
+        self.scrollable_frame_columnas.pack(expand=True, padx=10, pady=10)
 
     # prod de la seccion donde aplicaremos la tecnica de anonimizacion
     def interfaz_secion_anonimizacion(self):
@@ -99,42 +102,46 @@ class principal:
         # marco principal de esta seccion
         self.marco_prin_anonimizacion = ctk.CTkFrame(self.root, width=560)
         self.marco_prin_anonimizacion.pack(padx=10, pady=10)
-        
-        self.marco_op_anonimizacion = ctk.CTkFrame(self.marco_prin_anonimizacion, width=560)
-        self.marco_op_anonimizacion.grid(padx="10", row=1, column=0, columnspan=3)
+
+        self.marco_op_anonimizacion = ctk.CTkFrame(
+            self.marco_prin_anonimizacion, width=560)
+        self.marco_op_anonimizacion.grid(
+            padx="10", row=1, column=0, columnspan=3)
         # cosas que iran dentro de este marco
         # titulo de la seccion
         ctk.CTkLabel(self.marco_prin_anonimizacion, text="Tecnica de Anonimizacion", width=580,
                      anchor="w", padx="10", pady="10").grid(row=0, column=0, columnspan=3)
-        
+
         # 1. opcion Eliminacion
         self.opcion_escogida = tk.StringVar(value=None)
         self.radiobutton_eliminacion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Eliminar Columnas",
-                                                     variable=self.opcion_escogida, value="op1", width=150).grid(row=1, column=0, padx="18", pady="10")
-        
+                                                          variable=self.opcion_escogida, value="op1", width=150).grid(row=1, column=0, padx="18", pady="10")
+
         # 2. opcion Encriptacion
         self.radiobutton_enriptacion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Encriptar Columnas",
-                                                     variable=self.opcion_escogida, value="op2", width=150).grid(row=1, column=1, padx="18", pady="10")
-        
+                                                          variable=self.opcion_escogida, value="op2", width=150).grid(row=1, column=1, padx="18", pady="10")
+
         # 3. opcion Sustitucion
         self.radiobutton_sustitucion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Sustituir Columnas",
-                                                     variable=self.opcion_escogida, value="op3", width=150).grid(row=1, column=2, padx="18", pady="10")
-        
-        #parte de la ruta del archivo nuevo anonimizado
-        self.salida = ctk.CTkEntry(self.marco_prin_anonimizacion, width=460, state="disabled")
+                                                          variable=self.opcion_escogida, value="op3", width=150).grid(row=1, column=2, padx="18", pady="10")
+
+        # parte de la ruta del archivo nuevo anonimizado
+        self.salida = ctk.CTkEntry(
+            self.marco_prin_anonimizacion, width=460, state="disabled")
         self.salida.grid(row=2, column=0, columnspan=2, padx="10", pady="10")
-        
+
         self.boton_escoger_guardado = ctk.CTkButton(
             self.marco_prin_anonimizacion, text="Escoger.......", command=lambda: self.abrir_archivo(), width=60)
         self.boton_escoger_guardado.grid(row=2, column=2, padx="10", pady="10")
-        
+
         # boton que guardara el nuevo archivo anonimizado
         self.boton_guardar_anonimizado = ctk.CTkButton(self.marco_prin_anonimizacion, text="Guardar", command=lambda: self.abrir_vista_previa(
         ), width=560, state="disabled")
-        self.boton_guardar_anonimizado.grid(row=4, column=0, columnspan=3, pady="5")
-
+        self.boton_guardar_anonimizado.grid(
+            row=4, column=0, columnspan=3, pady="5")
 
     # prod para limpiar la ruta
+
     def limpiar_ruta(self):
         self.entrada.configure(state="normal")
         self.entrada.delete(0, ctk.END)
@@ -143,12 +150,14 @@ class principal:
         self.label_resul_archivo.configure(text="")
 
     # abrir dialogo
+    def abrir_archivo(self):
         archivo = filedialog.askopenfilename(title="Buscar Archivo")
         if archivo != "" and archivo != None:
             self.limpiar_ruta()
             self.entrada.configure(state="normal")
             self.entrada.insert(0, archivo)
             self.escoger_archivo()
+            self.generar_checkboxes()
             self.entrada.configure(state="disabled")
         else:
             self.label_resul_archivo.configure(
@@ -188,10 +197,18 @@ class principal:
 
     # prod que abrira la vista previa
     def abrir_vista_previa(self):
+        print(self.nombres_columnas[3])
         self.root.destroy()
         vp = vistaPrevia(data=self.dataframe, cabeceras=self.nombres_columnas,
                          path=self.path)
 
+    # prod para cargar los checkboxs
+    def generar_checkboxes(self):
+        for columna in self.nombres_columnas:
+            checkbox = ctk.CTkCheckBox(
+                self.scrollable_frame_columnas, text=columna)
+            checkbox.pack(anchor='w', padx=10, pady=5)
+            
 # clase que crea la pantalla de las vista previa de un archivo
 
 

@@ -20,11 +20,3 @@ Install the librarys from the terminal with the followings command.
 pip install pandas
 pip install openpyxl
 ```
-
-For interact with the commads of OS, it need the library [tkinterdnd2](https://pypi.org/project/tkinterdnd2/) 
-
-for installing the library use de folliwing commad.
-
-```sh
-pip install tkinterdnd2
-```
