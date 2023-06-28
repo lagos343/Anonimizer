@@ -1,4 +1,5 @@
-from tkinter import filedialog 
+import tkinter as tk
+from tkinter import filedialog
 import customtkinter as ctk
 import pandas as pd
 import threading
@@ -9,8 +10,6 @@ ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
 
 # clase que crea la pantalla principal
-
-
 class principal:
 
     path = ""  # ruta de donde se extraera el archivo con la informacion
@@ -24,23 +23,26 @@ class principal:
         self.root.geometry("600x600")
         self.root.resizable(False, False)  # no permite redimensionar
 
-        #seccion de escoger archivo        
+        # seccion de escoger archivo
         self.interfaz_escoger_archivo()
-        
+
         # seccion lista de las columnas
         self.interfaz_columnas_lista()
+        
+        #seccion de anonimizacion
+        self.interfaz_secion_anonimizacion()
 
-        #comprobacion especial por si regresamos de la ventana de vista previa
+        # comprobacion especial por si regresamos de la ventana de vista previa
         if path != "":
             self.entrada.configure(state="normal")
             self.entrada.insert(0, path)
             self.escoger_archivo()
             self.entrada.configure(state="disabled")
-        
+
         # Bucle de ejecución
         self.root.mainloop()
-        
-    #prod que creara la interfaz para escoger archivo
+
+    # prod que creara la interfaz para escoger archivo
     def interfaz_escoger_archivo(self):
         # añadimos el contenido de esta ventana
         self.marco = ctk.CTkFrame(self.root)
@@ -73,42 +75,78 @@ class principal:
         # boton que mostrara la vista previa
         self.boton_vista_previa = ctk.CTkButton(self.marco, text="Cargar vista previa del archivo", command=lambda: self.abrir_vista_previa(
         ), width=560, state="disabled")
-        self.boton_vista_previa.grid(row=4, column=0, columnspan=3, pady="10")
+        self.boton_vista_previa.grid(row=4, column=0, columnspan=3, pady="5")
 
-    #prod que creara la interfaz para la lista de columnas
+    # prod que creara la interfaz para la lista de columnas
     def interfaz_columnas_lista(self):
-    
-        #marco que tendra la lista
-        self.marco_columnas = ctk.CTkFrame(self.root)
-        self.marco_columnas.pack(padx=10, pady=10)
 
-        #titulo de la seccion
+        # marco que tendra la lista
+        self.marco_columnas = ctk.CTkFrame(self.root)
+        self.marco_columnas.pack(padx=10)
+
+        # titulo de la seccion
         ctk.CTkLabel(self.marco_columnas, text="Columnas a Anonimizar", width=580,
                      anchor="w", padx="10", pady="10").pack()
-        
+
         # widget que permite el sclor por si la lista supera el tamaño
         self.scrollable_frame = ctk.CTkScrollableFrame(
-            self.marco_columnas, width=560, fg_color="transparent", orientation="vertical", border_color="SlateGray", border_width=2)
-        self.scrollable_frame.pack( expand=True, padx=10, pady=10)
-        
-    #prod de la seccion donde aplicaremos la tecnica de anonimizacion
+            self.marco_columnas, width=560, height=100, fg_color="transparent", orientation="vertical", border_color="SlateGray", border_width=2)
+        self.scrollable_frame.pack(expand=True, padx=10, pady=10)
+
+    # prod de la seccion donde aplicaremos la tecnica de anonimizacion
     def interfaz_secion_anonimizacion(self):
-        #marco que tendra la lista
-        self.marco_prin_anonimizacion = ctk.CTkFrame(self.root)
+
+        # marco principal de esta seccion
+        self.marco_prin_anonimizacion = ctk.CTkFrame(self.root, width=560)
         self.marco_prin_anonimizacion.pack(padx=10, pady=10)
+        
+        self.marco_op_anonimizacion = ctk.CTkFrame(self.marco_prin_anonimizacion, width=560)
+        self.marco_op_anonimizacion.grid(padx="10", row=1, column=0, columnspan=3)
+        # cosas que iran dentro de este marco
+        # titulo de la seccion
+        ctk.CTkLabel(self.marco_prin_anonimizacion, text="Tecnica de Anonimizacion", width=580,
+                     anchor="w", padx="10", pady="10").grid(row=0, column=0, columnspan=3)
+        
+        # 1. opcion Eliminacion
+        self.opcion_escogida = tk.StringVar(value=None)
+        self.radiobutton_eliminacion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Eliminar Columnas",
+                                                     variable=self.opcion_escogida, value="op1", width=150).grid(row=1, column=0, padx="18", pady="10")
+        
+        # 2. opcion Encriptacion
+        self.radiobutton_enriptacion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Encriptar Columnas",
+                                                     variable=self.opcion_escogida, value="op2", width=150).grid(row=1, column=1, padx="18", pady="10")
+        
+        # 3. opcion Sustitucion
+        self.radiobutton_sustitucion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Sustituir Columnas",
+                                                     variable=self.opcion_escogida, value="op3", width=150).grid(row=1, column=2, padx="18", pady="10")
+        
+        #parte de la ruta del archivo nuevo anonimizado
+        self.salida = ctk.CTkEntry(self.marco_prin_anonimizacion, width=460, state="disabled")
+        self.salida.grid(row=2, column=0, columnspan=2, padx="10", pady="10")
+        
+        self.boton_escoger_guardado = ctk.CTkButton(
+            self.marco_prin_anonimizacion, text="Escoger.......", command=lambda: self.abrir_archivo(), width=60)
+        self.boton_escoger_guardado.grid(row=2, column=2, padx="10", pady="10")
+        
+        # boton que guardara el nuevo archivo anonimizado
+        self.boton_guardar_anonimizado = ctk.CTkButton(self.marco_prin_anonimizacion, text="Guardar", command=lambda: self.abrir_vista_previa(
+        ), width=560, state="disabled")
+        self.boton_guardar_anonimizado.grid(row=4, column=0, columnspan=3, pady="5")
+
 
     # prod para limpiar la ruta
     def limpiar_ruta(self):
+        self.entrada.configure(state="normal")
         self.entrada.delete(0, ctk.END)
+        self.entrada.configure(state="disabled")
         self.boton_vista_previa.configure(state="disabled")
         self.label_resul_archivo.configure(text="")
-        
-    #abrir dialogo
-    def abrir_archivo(self):
+
+    # abrir dialogo
         archivo = filedialog.askopenfilename(title="Buscar Archivo")
         if archivo != "" and archivo != None:
+            self.limpiar_ruta()
             self.entrada.configure(state="normal")
-            self.limpiar_ruta()            
             self.entrada.insert(0, archivo)
             self.escoger_archivo()
             self.entrada.configure(state="disabled")
@@ -141,14 +179,14 @@ class principal:
                 self.label_resul_archivo.configure(
                     text="El archivo escogido se ha encontrado exitosamente", text_color="green")
 
-                self.boton_vista_previa.configure(state="normal")                
+                self.boton_vista_previa.configure(state="normal")
             except:
                 self.label_resul_archivo.configure(
                     text="El archivo indicado no existe o no es de formato excel", text_color="red")
                 self.entrada.focus()
                 self.boton_vista_previa.configure(state="disabled")
 
-    #prod que abrira la vista previa
+    # prod que abrira la vista previa
     def abrir_vista_previa(self):
         self.root.destroy()
         vp = vistaPrevia(data=self.dataframe, cabeceras=self.nombres_columnas,
@@ -158,7 +196,7 @@ class principal:
 
 
 class vistaPrevia:
-    
+
     nombre_archivo = ""
     path = ""
 
@@ -166,7 +204,7 @@ class vistaPrevia:
         # obtenemos el nombre del archivo
         self.path = path
         self.nombre_archivo = os.path.basename(self.path)
-        
+
         self.root = ctk.CTk()
         self.root.geometry("1000x650")
         self.root.resizable(False, False)
@@ -195,17 +233,16 @@ class vistaPrevia:
         # widget que permite el scroll cuando nustra vista previa sobrepasa el ancho del formulario
         self.scrollable_frame = ctk.CTkScrollableFrame(
             self.root, width=1000, height=568, fg_color="transparent", orientation="horizontal")
-        self.scrollable_frame.pack( expand=True)
+        self.scrollable_frame.pack(expand=True)
 
         # dentro de ests widget se crearan todos los widgets de la vista previa
         self._frame = ctk.CTkFrame(
             self.scrollable_frame, width=1000, height=568)
         self._frame.pack(fill='both', expand=True)
-        
+
         self.boton_regresar = ctk.CTkButton(
             self.root, text="Regresar", command=lambda: self.regresar_principal(), width=200)
         self.boton_regresar.pack(pady="5")
-
 
         # la vista previa solo cargara maximo 20 registros
         if num_filas > 18:
@@ -234,7 +271,7 @@ class vistaPrevia:
         cuadro_texto = ctk.CTkEntry(self._frame, width=250, font=('Arial', 12))
         cuadro_texto.insert(0, valor)
         cuadro_texto.grid(row=fila, column=columna, pady=1, padx=1)
-        
+
     def regresar_principal(self):
         self.root.destroy()
-        hm = principal(path=self.path)   
+        hm = principal(path=self.path)
