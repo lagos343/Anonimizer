@@ -14,7 +14,7 @@ pip install customtkinter
 
 For read the Excel Sheets requires [Pandas](https://pandas.pydata.org/) and [OpenPyXl](https://openpyxl.readthedocs.io/en/stable/#)
 
-Install the librarys from the terminal with the followings command.
+Install the librarys from the terminal with the followings commands.
 
 ```sh
 pip install pandas

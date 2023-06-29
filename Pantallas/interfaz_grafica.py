@@ -9,8 +9,24 @@ import os
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
 
+#funcion para centrar las ventanas de la app en la pantalla
+def centrar_ventana(ventana):
+    ventana.update_idletasks()  # Actualizar la ventana para obtener su tamaño correcto
+    ancho_ventana = ventana.winfo_width()
+    altura_ventana = ventana.winfo_height()
+    
+    # Obtener las dimensiones de la pantalla
+    ancho_pantalla = ventana.winfo_screenwidth()
+    altura_pantalla = ventana.winfo_screenheight()
+    
+    # Calcular las coordenadas para centrar la ventana
+    x = (ancho_pantalla - ancho_ventana) // 2
+    y = (altura_pantalla - 60 - altura_ventana) // 2
+    
+    # Establecer las coordenadas de la ventana
+    ventana.geometry(f"+{x}+{y}")
+    
 # clase que crea la pantalla principal
-
 
 class principal:
 
@@ -40,10 +56,12 @@ class principal:
             self.entrada.configure(state="normal")
             self.entrada.insert(0, path)
             self.escoger_archivo()
+            self.generar_checkboxes()
             self.entrada.configure(state="disabled")
 
         # Bucle de ejecución
-        self.root.mainloop()
+        centrar_ventana(self.root)
+        self.root.mainloop()        
 
     # prod que creara la interfaz para escoger archivo
     def interfaz_escoger_archivo(self):
@@ -141,16 +159,16 @@ class principal:
             row=4, column=0, columnspan=3, pady="5")
 
     # prod para limpiar la ruta
-
     def limpiar_ruta(self):
         self.entrada.configure(state="normal")
         self.entrada.delete(0, ctk.END)
         self.entrada.configure(state="disabled")
         self.boton_vista_previa.configure(state="disabled")
         self.label_resul_archivo.configure(text="")
+        self.limpiar_checkbox()
 
     # abrir dialogo
-    def abrir_archivo(self):
+    def abrir_archivo(self):        
         archivo = filedialog.askopenfilename(title="Buscar Archivo")
         if archivo != "" and archivo != None:
             self.limpiar_ruta()
@@ -159,7 +177,7 @@ class principal:
             self.escoger_archivo()
             self.generar_checkboxes()
             self.entrada.configure(state="disabled")
-        else:
+        else:            
             self.label_resul_archivo.configure(
                 text="No se escogio ningun archivo", text_color="red")
 
@@ -173,7 +191,7 @@ class principal:
             self.entrada.focus()
             self.boton_vista_previa.configure(state="disabled")
         else:
-            try:
+            try:                
                 # intentamos cargar el archivo de la ruta selecionada
                 datos_excel = pd.read_excel(
                     self.path, nrows=None)
@@ -186,31 +204,38 @@ class principal:
                     datos_excel.values, columns=self.nombres_columnas)
 
                 self.label_resul_archivo.configure(
-                    text="El archivo escogido se ha encontrado exitosamente", text_color="green")
+                    text="El archivo se ha escogido exitosamente", text_color="green")
 
                 self.boton_vista_previa.configure(state="normal")
-            except:
+            except: 
+                self.nombres_columnas.clear()               
                 self.label_resul_archivo.configure(
-                    text="El archivo indicado no existe o no es de formato excel", text_color="red")
+                    text="El archivo indicado no es de formato excel", text_color="red")
                 self.entrada.focus()
-                self.boton_vista_previa.configure(state="disabled")
+                self.boton_vista_previa.configure(state="disabled")                
 
     # prod que abrira la vista previa
     def abrir_vista_previa(self):
-        print(self.nombres_columnas[3])
         self.root.destroy()
         vp = vistaPrevia(data=self.dataframe, cabeceras=self.nombres_columnas,
                          path=self.path)
 
     # prod para cargar los checkboxs
     def generar_checkboxes(self):
+        self.limpiar_checkbox()             
+        #creamos los nuevos
         for columna in self.nombres_columnas:
             checkbox = ctk.CTkCheckBox(
                 self.scrollable_frame_columnas, text=columna)
             checkbox.pack(anchor='w', padx=10, pady=5)
-            
-# clase que crea la pantalla de las vista previa de un archivo
 
+    def limpiar_checkbox(self):
+        #de haber ya checkbox los destuimos
+        for child in self.scrollable_frame_columnas.winfo_children():
+            if isinstance(child, ctk.CTkCheckBox):
+                child.destroy()              
+                           
+# clase que crea la pantalla de las vista previa de un archivo
 
 class vistaPrevia:
 
@@ -237,6 +262,7 @@ class vistaPrevia:
         self.cargar_datos_thread = threading.Thread(target=self.cargar_datos)
         self.cargar_datos_thread.start()
 
+        centrar_ventana(self.root)
         self.root.mainloop()
 
     def cargar_datos(self):
