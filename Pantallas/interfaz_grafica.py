@@ -111,7 +111,7 @@ class principal:
 
         # widget que permite el sclor por si la lista supera el tamaño
         self.scrollable_frame_columnas = ctk.CTkScrollableFrame(
-            self.marco_columnas, width=560, height=100, fg_color="transparent", orientation="vertical", border_color="SlateGray", border_width=2)
+            self.marco_columnas, width=560, height=100, fg_color="transparent", orientation="vertical", border_width=2)
         self.scrollable_frame_columnas.pack(expand=True, padx=10, pady=10)
 
     # prod de la seccion donde aplicaremos la tecnica de anonimizacion
@@ -250,6 +250,8 @@ class vistaPrevia:
         self.root = ctk.CTk()
         self.root.geometry("1000x650")
         self.root.resizable(False, False)
+        #invalidamos el metodo de cerrar por defecto y lo reempolazamos por la funcion de regresar al menu principal
+        self.root.protocol("WM_DELETE_WINDOW", self.regresar_principal) 
         self.root.title("Vista Previa - '"+self.nombre_archivo+"' - ")
 
         # inicializamos las variables con los parametros recibidos de la pantalla principal
