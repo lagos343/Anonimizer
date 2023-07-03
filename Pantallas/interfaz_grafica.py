@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 import customtkinter as ctk
 import pandas as pd
 import threading
@@ -9,26 +9,28 @@ import os
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
 
-#funcion para centrar las ventanas de la app en la pantalla
+# funcion para centrar las ventanas de la app en la pantalla
 def centrar_ventana(ventana):
     ventana.update_idletasks()  # Actualizar la ventana para obtener su tamaño correcto
     ancho_ventana = ventana.winfo_width()
     altura_ventana = ventana.winfo_height()
-    
+
     # Obtener las dimensiones de la pantalla
     ancho_pantalla = ventana.winfo_screenwidth()
     altura_pantalla = ventana.winfo_screenheight()
-    
+
     # Calcular las coordenadas para centrar la ventana
     x = (ancho_pantalla - ancho_ventana) // 2
     y = (altura_pantalla - 60 - altura_ventana) // 2
-    
+
     # Establecer las coordenadas de la ventana
     ventana.geometry(f"+{x}+{y}")
-    
-# clase que crea la pantalla principal
 
+# clase que crea la pantalla principal
 class principal:
+    # lista de opciones validas para datos sensibles que pueden ser anonimizados
+    opciones_faker = ["Nombre", "Apellido", "Nombre Completo",
+                      "Direccion", "Correo", "Identificacion", "Telefono"]
 
     columnas_selecionadas = []
     path = ""  # ruta de donde se extraera el archivo con la informacion
@@ -41,7 +43,8 @@ class principal:
         self.root.title("Anonimizer - Grupo #3")
         self.root.geometry("600x600")
         self.root.resizable(False, False)  # no permite redimensionar
-
+        self.root.protocol("WM_DELETE_WINDOW", self.cerrar_anonimizer) #en caso de intentar cerrar se llamara la funcion de cerrar_anonimizer
+        
         # seccion de escoger archivo
         self.interfaz_escoger_archivo()
 
@@ -57,11 +60,12 @@ class principal:
             self.entrada.insert(0, path)
             self.escoger_archivo()
             self.generar_checkboxes()
+            self.operaciones_combobox()
             self.entrada.configure(state="disabled")
 
         # Bucle de ejecución
         centrar_ventana(self.root)
-        self.root.mainloop()        
+        self.root.mainloop()
 
     # prod que creara la interfaz para escoger archivo
     def interfaz_escoger_archivo(self):
@@ -131,17 +135,17 @@ class principal:
                      anchor="w", padx="10", pady="10").grid(row=0, column=0, columnspan=3)
 
         # 1. opcion Eliminacion
-        self.opcion_escogida = tk.StringVar(value=None)
+        self.opcion_escogida = ctk.StringVar(value=None)
         self.radiobutton_eliminacion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Eliminar Columnas",
-                                                          variable=self.opcion_escogida, value="op1", width=150).grid(row=1, column=0, padx="18", pady="10")
+                                                          variable=self.opcion_escogida, value="op1", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=0, padx="18", pady="10")
 
         # 2. opcion Encriptacion
         self.radiobutton_enriptacion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Encriptar Columnas",
-                                                          variable=self.opcion_escogida, value="op2", width=150).grid(row=1, column=1, padx="18", pady="10")
+                                                          variable=self.opcion_escogida, value="op2", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=1, padx="18", pady="10")
 
         # 3. opcion Sustitucion
         self.radiobutton_sustitucion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Sustituir Columnas",
-                                                          variable=self.opcion_escogida, value="op3", width=150).grid(row=1, column=2, padx="18", pady="10")
+                                                          variable=self.opcion_escogida, value="op3", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=2, padx="18", pady="10")
 
         # parte de la ruta del archivo nuevo anonimizado
         self.salida = ctk.CTkEntry(
@@ -160,6 +164,7 @@ class principal:
 
     # prod para limpiar la ruta
     def limpiar_ruta(self):
+        self.path = ""
         self.entrada.configure(state="normal")
         self.entrada.delete(0, ctk.END)
         self.entrada.configure(state="disabled")
@@ -168,7 +173,7 @@ class principal:
         self.limpiar_checkbox()
 
     # abrir dialogo
-    def abrir_archivo(self):        
+    def abrir_archivo(self):
         archivo = filedialog.askopenfilename(title="Buscar Archivo")
         if archivo != "" and archivo != None:
             self.limpiar_ruta()
@@ -176,8 +181,11 @@ class principal:
             self.entrada.insert(0, archivo)
             self.escoger_archivo()
             self.generar_checkboxes()
+            self.operaciones_combobox()
             self.entrada.configure(state="disabled")
-        else:            
+        else:
+            self.limpiar_checkbox()
+            self.limpiar_ruta()
             self.label_resul_archivo.configure(
                 text="No se escogio ningun archivo", text_color="red")
 
@@ -191,7 +199,7 @@ class principal:
             self.entrada.focus()
             self.boton_vista_previa.configure(state="disabled")
         else:
-            try:                
+            try:
                 # intentamos cargar el archivo de la ruta selecionada
                 datos_excel = pd.read_excel(
                     self.path, nrows=None)
@@ -207,36 +215,77 @@ class principal:
                     text="El archivo se ha escogido exitosamente", text_color="green")
 
                 self.boton_vista_previa.configure(state="normal")
-            except: 
-                self.nombres_columnas.clear()               
+            except:
+                self.nombres_columnas.clear()
+                self.limpiar_ruta()
                 self.label_resul_archivo.configure(
                     text="El archivo indicado no es de formato excel", text_color="red")
                 self.entrada.focus()
-                self.boton_vista_previa.configure(state="disabled")                
+                self.boton_vista_previa.configure(state="disabled")
 
     # prod que abrira la vista previa
     def abrir_vista_previa(self):
-        self.root.destroy()
-        vp = vistaPrevia(data=self.dataframe, cabeceras=self.nombres_columnas,
-                         path=self.path)
+        resp = messagebox.askquestion(
+            "Advertencia", "¿Seguro que desea abrir una vista previa?, tome en cuenta que eso borrara todo progreso en este formulario")
+
+        if resp == "yes":
+            self.root.destroy()
+            vp = vistaPrevia(data=self.dataframe, cabeceras=self.nombres_columnas,
+                             path=self.path)
 
     # prod para cargar los checkboxs
     def generar_checkboxes(self):
-        self.limpiar_checkbox()             
-        #creamos los nuevos
+        self.limpiar_checkbox()
+
         for columna in self.nombres_columnas:
-            checkbox = ctk.CTkCheckBox(
-                self.scrollable_frame_columnas, text=columna)
-            checkbox.pack(anchor='w', padx=10, pady=5)
+            frame = ctk.CTkFrame(self.scrollable_frame_columnas)
+            frame.pack(fill='x', padx=10, pady=5)
 
+            checkbox = ctk.CTkCheckBox(frame, text=columna, width=300)
+            checkbox.pack(side='left')
+
+            combobox = ctk.CTkComboBox(
+                frame, values=self.opciones_faker, state="disabled", width=200)
+            combobox.pack(side='left')
+
+    # limpia los checkboxes
     def limpiar_checkbox(self):
-        #de haber ya checkbox los destuimos
+        # de haber ya checkbox estos estan dentro de un CTkFrame por ende destruimos ese control
         for child in self.scrollable_frame_columnas.winfo_children():
-            if isinstance(child, ctk.CTkCheckBox):
-                child.destroy()              
-                           
-# clase que crea la pantalla de las vista previa de un archivo
+            if isinstance(child, ctk.CTkFrame):
+                child.destroy()
 
+    # prod que activa o desactiva los combobx dependiendo de que radio este selecionado
+    def operaciones_combobox(self):
+        estado = "disabled"  # por defecto los radio desactivan los combobox
+
+        # la opcion 3 indica que se escogio sustitucion y esto amerita activar los combobox
+        if self.opcion_escogida.get() == "op3":
+            estado = "readonly"
+
+        # recorremos los hijos de nuestro frame de scroll
+        for child in self.scrollable_frame_columnas.winfo_children():
+
+            # en particular nos interesan los CTkFrame
+            if isinstance(child, ctk.CTkFrame):
+                # extraemos los hijos de ese CTkframe en formato de lista
+                hijos = child.winfo_children()
+                # solo hay dos hijos [0=Checkbox, 1=Combobox] y por ende no interesa el 1
+                combobox = hijos[1]                
+                # cambiamos el estado dependiendo de que radio esta seleccionado
+                combobox.configure(state=estado)                
+                # por defecto tendran selecionada la primer opcion
+                combobox.set(self.opciones_faker[0])
+
+    #prod que se llamara al intentar cerrar Anonimizer
+    def cerrar_anonimizer(self):
+        resp = messagebox.askquestion(
+            "Advertencia", "¿Seguro que desea cerrar Anonimizer?, tome en cuenta que eso borrara todo progreso en este formulario")
+
+        if resp == "yes":
+            self.root.destroy()
+
+# clase que crea la pantalla de las vista previa de un archivo
 class vistaPrevia:
 
     nombre_archivo = ""
@@ -250,8 +299,8 @@ class vistaPrevia:
         self.root = ctk.CTk()
         self.root.geometry("1000x650")
         self.root.resizable(False, False)
-        #invalidamos el metodo de cerrar por defecto y lo reempolazamos por la funcion de regresar al menu principal
-        self.root.protocol("WM_DELETE_WINDOW", self.regresar_principal) 
+        # invalidamos el metodo de cerrar por defecto y lo reempolazamos por la funcion de regresar al menu principal
+        self.root.protocol("WM_DELETE_WINDOW", self.regresar_principal)
         self.root.title("Vista Previa - '"+self.nombre_archivo+"' - ")
 
         # inicializamos las variables con los parametros recibidos de la pantalla principal

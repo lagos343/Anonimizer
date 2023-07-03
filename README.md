@@ -20,3 +20,11 @@ Install the librarys from the terminal with the followings commands.
 pip install pandas
 pip install openpyxl
 ```
+
+Finaly, for generate fake information for anonimizated columns requires [Faker](https://faker.readthedocs.io/en/master/)
+
+Install the librarys from the terminal with the following command.
+
+```sh
+pip install Faker
+```
