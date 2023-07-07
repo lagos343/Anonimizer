@@ -153,12 +153,12 @@ class principal:
         self.salida.grid(row=2, column=0, columnspan=2, padx="10", pady="10")
 
         self.boton_escoger_guardado = ctk.CTkButton(
-            self.marco_prin_anonimizacion, text="Escoger.......", command=lambda: self.abrir_archivo(), width=60)
+            self.marco_prin_anonimizacion, text="Escoger.......", width=60)
         self.boton_escoger_guardado.grid(row=2, column=2, padx="10", pady="10")
 
         # boton que guardara el nuevo archivo anonimizado
-        self.boton_guardar_anonimizado = ctk.CTkButton(self.marco_prin_anonimizacion, text="Guardar", command=lambda: self.abrir_vista_previa(
-        ), width=560, state="disabled")
+        self.boton_guardar_anonimizado = ctk.CTkButton(self.marco_prin_anonimizacion, text="Guardar", command=lambda: self.eliminar_columnas(
+        ), width=560, state="normal")
         self.boton_guardar_anonimizado.grid(
             row=4, column=0, columnspan=3, pady="5")
 
@@ -284,6 +284,13 @@ class principal:
 
         if resp == "yes":
             self.root.destroy()
+            
+    
+    
+    #prod para la anonimizacion
+    #prod para eliminar columnas
+    def eliminar_columnas(self):
+        print("eliminar")
 
 # clase que crea la pantalla de las vista previa de un archivo
 class vistaPrevia:
