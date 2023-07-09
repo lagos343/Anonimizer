@@ -10,6 +10,8 @@ ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
 
 # funcion para centrar las ventanas de la app en la pantalla
+
+
 def centrar_ventana(ventana):
     ventana.update_idletasks()  # Actualizar la ventana para obtener su tamaño correcto
     ancho_ventana = ventana.winfo_width()
@@ -27,12 +29,14 @@ def centrar_ventana(ventana):
     ventana.geometry(f"+{x}+{y}")
 
 # clase que crea la pantalla principal
+
+
 class principal:
     # lista de opciones validas para datos sensibles que pueden ser anonimizados
     opciones_faker = ["Nombre", "Apellido", "Nombre Completo",
-                      "Direccion", "Correo", "Identificacion", "Telefono"]
+                      "Direccion", "Correo", "Identificacion", "Telefono"]       
 
-    columnas_selecionadas = []
+    columnas_selecionadas = []  # lista de las columnas que se anonimizaran
     path = ""  # ruta de donde se extraera el archivo con la informacion
     nombres_columnas = []  # contendra las cabeceras de la hoja de calculo
     dataframe = pd.DataFrame()  # contendra la data extraida de la hoja de calculo
@@ -43,8 +47,9 @@ class principal:
         self.root.title("Anonimizer - Grupo #3")
         self.root.geometry("600x600")
         self.root.resizable(False, False)  # no permite redimensionar
-        self.root.protocol("WM_DELETE_WINDOW", self.cerrar_anonimizer) #en caso de intentar cerrar se llamara la funcion de cerrar_anonimizer
-        
+        # en caso de intentar cerrar se llamara la funcion de cerrar_anonimizer
+        self.root.protocol("WM_DELETE_WINDOW", self.cerrar_anonimizer)
+
         # seccion de escoger archivo
         self.interfaz_escoger_archivo()
 
@@ -119,8 +124,8 @@ class principal:
         self.scrollable_frame_columnas.pack(expand=True, padx=10, pady=10)
 
     # prod de la seccion donde aplicaremos la tecnica de anonimizacion
-    def interfaz_secion_anonimizacion(self):
-
+    def interfaz_secion_anonimizacion(self):        
+        
         # marco principal de esta seccion
         self.marco_prin_anonimizacion = ctk.CTkFrame(self.root, width=560)
         self.marco_prin_anonimizacion.pack(padx=10, pady=10)
@@ -153,14 +158,21 @@ class principal:
         self.salida.grid(row=2, column=0, columnspan=2, padx="10", pady="10")
 
         self.boton_escoger_guardado = ctk.CTkButton(
-            self.marco_prin_anonimizacion, text="Escoger.......", width=60)
+            self.marco_prin_anonimizacion, text="Escoger.......", width=60, command=lambda: self.escoger_guardado())
         self.boton_escoger_guardado.grid(row=2, column=2, padx="10", pady="10")
 
         # boton que guardara el nuevo archivo anonimizado
-        self.boton_guardar_anonimizado = ctk.CTkButton(self.marco_prin_anonimizacion, text="Guardar", command=lambda: self.eliminar_columnas(
-        ), width=560, state="normal")
+        self.boton_guardar_anonimizado = ctk.CTkButton(self.marco_prin_anonimizacion, text="Guardar", command=lambda: self.empezar_annimizacion(
+        ), width=560, state="disabled")
         self.boton_guardar_anonimizado.grid(
             row=4, column=0, columnspan=3, pady="5")
+        
+        #Objeto con los procedimientos que seran llamados dependiendo de cada tecnica escogida
+        self.tecnicas_anonimizacion = {
+            "op1": self.eliminar_columnas,
+            "op2": self.encriptar_columnas,
+            "op3": self.sustituir_columnas
+        } 
 
     # prod para limpiar la ruta
     def limpiar_ruta(self):
@@ -271,28 +283,93 @@ class principal:
                 # extraemos los hijos de ese CTkframe en formato de lista
                 hijos = child.winfo_children()
                 # solo hay dos hijos [0=Checkbox, 1=Combobox] y por ende no interesa el 1
-                combobox = hijos[1]                
+                combobox = hijos[1]
                 # cambiamos el estado dependiendo de que radio esta seleccionado
-                combobox.configure(state=estado)                
+                combobox.configure(state=estado)
                 # por defecto tendran selecionada la primer opcion
                 combobox.set(self.opciones_faker[0])
 
-    #prod que se llamara al intentar cerrar Anonimizer
+    # prod que se llamara al intentar cerrar Anonimizer
     def cerrar_anonimizer(self):
         resp = messagebox.askquestion(
             "Advertencia", "¿Seguro que desea cerrar Anonimizer?, tome en cuenta que eso borrara todo progreso en este formulario")
 
         if resp == "yes":
             self.root.destroy()
+
+    # prods para la anonimizacion
+    # prod principal
+    def empezar_annimizacion(self):         
+             
+        if self.path == "":
+            messagebox.showerror(message="Selecione un archivo primero", title="Error")  
+        elif not self.obtener_columnas_seleccionadas():
+            messagebox.showerror(message="Selecione columnas antes de Guardar", title="Error")            
+        elif self.opcion_escogida.get() == "":
+            messagebox.showerror(message="Selecione una tecnica de Anonimizacion", title="Error")  
+        else :
+            tecnica_aplicada = self.tecnicas_anonimizacion.get(self.opcion_escogida.get())
+            tecnica_aplicada()
+            #messagebox.showinfo(message="Archivo guardado correctamente", title="Exito")
             
+        #print(self.columnas_selecionadas)
+
+    # prod que obtiene que columnas fueron seleccionadas
+    def obtener_columnas_seleccionadas(self):
+        self.columnas_selecionadas.clear()
+        for child in self.scrollable_frame_columnas.winfo_children():
+            if isinstance(child, ctk.CTkFrame):
+                hijos = child.winfo_children()
+                check = hijos[0]
+
+                if check.get() == 1:
+                    self.columnas_selecionadas.append(check.cget("text"))
+            
+        if len(self.columnas_selecionadas) >= 1:
+            return True
+        else:
+            return False
     
-    
-    #prod para la anonimizacion
-    #prod para eliminar columnas
+    # prod que escoge la ruta de guardado
+    def escoger_guardado(self):
+        self.ruta_guardado = ""
+        self.ruta_guardado = filedialog.asksaveasfilename(
+            title="Guardar Archivo",
+            defaultextension=".xlsx",
+            filetypes=[("Archivos de Excel", ".xlsx .xls")]
+        )
+
+        if self.ruta_guardado:
+            self.limpiar_ruta_guardado()
+            self.salida.configure(state="normal")
+            self.salida.insert(0, self.ruta_guardado)
+            self.salida.configure(state="disabled")
+            self.boton_guardar_anonimizado.configure(state="normal")
+        else:
+            self.limpiar_ruta_guardado()
+
+    # prod para limpiar la ruta de guardado
+    def limpiar_ruta_guardado(self):
+        self.salida.configure(state="normal")
+        self.salida.delete(0, ctk.END)
+        self.salida.configure(state="disabled")
+        self.boton_guardar_anonimizado.configure(state="disabled")
+
+    # prod para eliminar columnas
     def eliminar_columnas(self):
         print("eliminar")
+        
+    # prod para eliminar columnas
+    def encriptar_columnas(self):
+        print("encriptar")        
+        
+    # prod para eliminar columnas
+    def sustituir_columnas(self):
+        print("sustituir")
 
 # clase que crea la pantalla de las vista previa de un archivo
+
+
 class vistaPrevia:
 
     nombre_archivo = ""
