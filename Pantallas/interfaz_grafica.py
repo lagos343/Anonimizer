@@ -308,7 +308,9 @@ class principal:
         elif self.opcion_escogida.get() == "":
             messagebox.showerror(message="Selecione una tecnica de Anonimizacion", title="Error")  
         else :
+            #si no hay errores, extraemos el prod que corresponda a la opcion escogida
             tecnica_aplicada = self.tecnicas_anonimizacion.get(self.opcion_escogida.get())
+            #coremos ese procedimiento
             tecnica_aplicada()
             #messagebox.showinfo(message="Archivo guardado correctamente", title="Exito")
             
@@ -317,13 +319,17 @@ class principal:
     # prod que obtiene que columnas fueron seleccionadas
     def obtener_columnas_seleccionadas(self):
         self.columnas_selecionadas.clear()
+        
+        #recorremos todos los widgets hijos del frame principal de scroll
         for child in self.scrollable_frame_columnas.winfo_children():
+            
+            #verificamos que los hijos sean de tipo CTkFrame, ya que dentro de este widget estan los checks
             if isinstance(child, ctk.CTkFrame):
-                hijos = child.winfo_children()
-                check = hijos[0]
+                hijos = child.winfo_children() #para cada uno extraemos la lista de hijos
+                check = hijos[0] # los hijos de este Frame son [0=checkbox, 1=combobox], por ende nos interesa el 0
 
-                if check.get() == 1:
-                    self.columnas_selecionadas.append(check.cget("text"))
+                if check.get() == 1: #el metodo get() retorna 1 si el checkbox esta seleccionado
+                    self.columnas_selecionadas.append(check.cget("text")) #añadimos a la lista la columna, que se extrae del texto del check
             
         if len(self.columnas_selecionadas) >= 1:
             return True
