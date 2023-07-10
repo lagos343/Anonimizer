@@ -139,35 +139,26 @@ class principal:
         # cosas que iran dentro de este marco
         # titulo de la seccion
         ctk.CTkLabel(self.marco_prin_anonimizacion, text="Tecnica de Anonimizacion", width=580,
-                     anchor="w", padx="10", pady="10").grid(row=0, column=0, columnspan=3)
+                     anchor="w", padx="10", pady="20").grid(row=0, column=0, columnspan=3)
 
         # 1. opcion Eliminacion
         self.opcion_escogida = ctk.StringVar(value=None)
         self.radiobutton_eliminacion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Eliminar Columnas",
-                                                          variable=self.opcion_escogida, value="op1", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=0, padx="18", pady="10")
+                                                          variable=self.opcion_escogida, value="op1", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=0, padx="18", pady="15")
 
         # 2. opcion Encriptacion
         self.radiobutton_enriptacion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Encriptar Columnas",
-                                                          variable=self.opcion_escogida, value="op2", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=1, padx="18", pady="10")
+                                                          variable=self.opcion_escogida, value="op2", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=1, padx="18", pady="15")
 
         # 3. opcion Sustitucion
         self.radiobutton_sustitucion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Sustituir Columnas",
-                                                          variable=self.opcion_escogida, value="op3", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=2, padx="18", pady="10")
-
-        # parte de la ruta del archivo nuevo anonimizado
-        self.salida = ctk.CTkEntry(
-            self.marco_prin_anonimizacion, width=460, state="disabled")
-        self.salida.grid(row=2, column=0, columnspan=2, padx="10", pady="10")
-
-        self.boton_escoger_guardado = ctk.CTkButton(
-            self.marco_prin_anonimizacion, text="Escoger.......", width=60, command=lambda: self.escoger_guardado())
-        self.boton_escoger_guardado.grid(row=2, column=2, padx="10", pady="10")
+                                                          variable=self.opcion_escogida, value="op3", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=2, padx="18", pady="15")
 
         # boton que guardara el nuevo archivo anonimizado
         self.boton_guardar_anonimizado = ctk.CTkButton(self.marco_prin_anonimizacion, text="Guardar", command=lambda: self.empezar_annimizacion(
-        ), width=560, state="disabled")
+        ), width=560, state="normal")
         self.boton_guardar_anonimizado.grid(
-            row=4, column=0, columnspan=3, pady="5")
+            row=4, column=0, columnspan=3, pady="20")
         
         #Objeto con los procedimientos que seran llamados dependiendo de cada tecnica escogida
         self.tecnicas_anonimizacion = {
@@ -308,7 +299,9 @@ class principal:
         elif not self.obtener_columnas_seleccionadas():
             messagebox.showerror(message="Selecione columnas antes de Guardar", title="Error")            
         elif self.opcion_escogida.get() == "":
-            messagebox.showerror(message="Selecione una tecnica de Anonimizacion", title="Error")  
+            messagebox.showerror(message="Selecione una tecnica de Anonimizacion", title="Error") 
+        elif not self.escoger_guardado():
+            messagebox.showerror(message="Selecione una ruta valida de guardado", title="Error") 
         else :
             #si no hay errores, extraemos el prod que corresponda a la opcion escogida
             tecnica_aplicada = self.tecnicas_anonimizacion.get(self.opcion_escogida.get())
@@ -348,20 +341,9 @@ class principal:
         )
 
         if self.ruta_guardado:
-            self.limpiar_ruta_guardado()
-            self.salida.configure(state="normal")
-            self.salida.insert(0, self.ruta_guardado)
-            self.salida.configure(state="disabled")
-            self.boton_guardar_anonimizado.configure(state="normal")
+            return True
         else:
-            self.limpiar_ruta_guardado()
-
-    # prod para limpiar la ruta de guardado
-    def limpiar_ruta_guardado(self):
-        self.salida.configure(state="normal")
-        self.salida.delete(0, ctk.END)
-        self.salida.configure(state="disabled")
-        self.boton_guardar_anonimizado.configure(state="disabled")
+            return False        
 
     # prod para eliminar columnas
     def eliminar_columnas(self):
@@ -369,6 +351,7 @@ class principal:
         
     # prod para eliminar columnas
     def encriptar_columnas(self):
+        data_frame_eliminacion = pd.DataFrame()
         data_frame_eliminacion = self.dataframe
         
         for columna in self.columnas_selecionadas:
