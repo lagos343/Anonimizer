@@ -4,6 +4,8 @@ import customtkinter as ctk
 import pandas as pd
 import threading
 import os
+import hashlib as hs
+import openpyxl
 
 # configuraciones globales de la interfaz
 ctk.set_appearance_mode("System")
@@ -367,12 +369,18 @@ class principal:
         
     # prod para eliminar columnas
     def encriptar_columnas(self):
+        data_frame_eliminacion = self.dataframe
+        
+        for columna in self.columnas_selecionadas:
+            data_frame_eliminacion[columna] = data_frame_eliminacion[columna].apply(lambda x: hs.sha256(str(x).encode()).hexdigest())
+        
+        data_frame_eliminacion.to_excel(self.ruta_guardado, index=False) 
         print("encriptar")        
         
     # prod para eliminar columnas
     def sustituir_columnas(self):
         print("sustituir")
-
+        
 # clase que crea la pantalla de las vista previa de un archivo
 
 
