@@ -347,18 +347,25 @@ class principal:
 
     # prod para eliminar columnas
     def eliminar_columnas(self):
-        print("eliminar")
+        
+        data_frame_eliminacion = pd.DataFrame(self.dataframe)
+
+        for columna in self.columnas_selecionadas:
+            del data_frame_eliminacion[columna]
+            
+        
+        data_frame_eliminacion.to_excel(self.ruta_guardado, index=False) 
+        messagebox.showinfo(message="El archivo se ha guardado correctamente", title="Exito") 
         
     # prod para eliminar columnas
     def encriptar_columnas(self):
-        data_frame_eliminacion = pd.DataFrame()
-        data_frame_eliminacion = self.dataframe
+        data_frame_encriptacion = pd.DataFrame(self.dataframe)
         
         for columna in self.columnas_selecionadas:
-            data_frame_eliminacion[columna] = data_frame_eliminacion[columna].apply(lambda x: hs.sha256(str(x).encode()).hexdigest())
+            data_frame_encriptacion[columna] = data_frame_encriptacion[columna].apply(lambda x: hs.sha256(str(x).encode()).hexdigest())
         
-        data_frame_eliminacion.to_excel(self.ruta_guardado, index=False) 
-        print("encriptar")        
+        data_frame_encriptacion.to_excel(self.ruta_guardado, index=False) 
+        messagebox.showinfo(message="El archivo se ha guardado correctamente", title="Exito")         
         
     # prod para eliminar columnas
     def sustituir_columnas(self):
