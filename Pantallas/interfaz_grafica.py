@@ -1,11 +1,11 @@
-import tkinter as tk
 from tkinter import filedialog, messagebox
 import customtkinter as ctk
 import pandas as pd
 import threading
 import os
 import hashlib as hs
-import openpyxl
+from faker import Faker
+import time
 
 # configuraciones globales de la interfaz
 ctk.set_appearance_mode("System")
@@ -35,9 +35,10 @@ def centrar_ventana(ventana):
 
 class principal:
     # lista de opciones validas para datos sensibles que pueden ser anonimizados
-    opciones_faker = ["Nombre", "Apellido", "Nombre Completo",
-                      "Direccion", "Correo", "Identificacion", "Telefono"]       
-
+    opciones_faker = ["Nombre", "Apellido", "Nombre Completo", "Pais",
+                      "Direccion", "Correo", "Identificacion", "Telefono", "Ciudad"]
+    ventana_carga = None
+    opciones_faker_seleccionadas = []  # lista de las opciones fake seleccionadas
     columnas_selecionadas = []  # lista de las columnas que se anonimizaran
     path = ""  # ruta de donde se extraera el archivo con la informacion
     nombres_columnas = []  # contendra las cabeceras de la hoja de calculo
@@ -68,8 +69,8 @@ class principal:
             self.escoger_archivo()
             self.generar_checkboxes()
             self.operaciones_combobox()
-            self.entrada.configure(state="disabled")
-
+            self.entrada.configure(state="disabled")               
+        
         # Bucle de ejecución
         centrar_ventana(self.root)
         self.root.mainloop()
@@ -91,7 +92,7 @@ class principal:
 
         # boton para comprobar que exista el archivo
         self.boton_envio = ctk.CTkButton(
-            self.marco, text="Buscar.......", command=lambda: self.abrir_archivo(), width=60)
+            self.marco, text="Buscar.......", command=lambda: threading.Thread(target=self.abrir_archivo).start(), width=60)
         self.boton_envio.grid(row=2, column=1)
 
         # boton para comprobar que exista el archivo
@@ -126,8 +127,8 @@ class principal:
         self.scrollable_frame_columnas.pack(expand=True, padx=10, pady=10)
 
     # prod de la seccion donde aplicaremos la tecnica de anonimizacion
-    def interfaz_secion_anonimizacion(self):        
-        
+    def interfaz_secion_anonimizacion(self):
+
         # marco principal de esta seccion
         self.marco_prin_anonimizacion = ctk.CTkFrame(self.root, width=560)
         self.marco_prin_anonimizacion.pack(padx=10, pady=10)
@@ -159,13 +160,13 @@ class principal:
         ), width=560, state="normal")
         self.boton_guardar_anonimizado.grid(
             row=4, column=0, columnspan=3, pady="20")
-        
-        #Objeto con los procedimientos que seran llamados dependiendo de cada tecnica escogida
+
+        # Objeto con los procedimientos que seran llamados dependiendo de cada tecnica escogida
         self.tecnicas_anonimizacion = {
             "op1": self.eliminar_columnas,
             "op2": self.encriptar_columnas,
             "op3": self.sustituir_columnas
-        } 
+        }
 
     # prod para limpiar la ruta
     def limpiar_ruta(self):
@@ -292,45 +293,63 @@ class principal:
 
     # prods para la anonimizacion
     # prod principal
-    def empezar_annimizacion(self):         
-             
+    def empezar_annimizacion(self):
+
         if self.path == "":
-            messagebox.showerror(message="Selecione un archivo primero", title="Error")  
+            messagebox.showerror(
+                message="Selecione un archivo primero", title="Error")
         elif not self.obtener_columnas_seleccionadas():
-            messagebox.showerror(message="Selecione columnas antes de Guardar", title="Error")            
+            messagebox.showerror(
+                message="Selecione columnas antes de Guardar", title="Error")
         elif self.opcion_escogida.get() == "":
-            messagebox.showerror(message="Selecione una tecnica de Anonimizacion", title="Error") 
+            messagebox.showerror(
+                message="Selecione una tecnica de Anonimizacion", title="Error")
         elif not self.escoger_guardado():
-            messagebox.showerror(message="Selecione una ruta valida de guardado", title="Error") 
-        else :
-            #si no hay errores, extraemos el prod que corresponda a la opcion escogida
-            tecnica_aplicada = self.tecnicas_anonimizacion.get(self.opcion_escogida.get())
-            #coremos ese procedimiento
-            tecnica_aplicada()
-            #messagebox.showinfo(message="Archivo guardado correctamente", title="Exito")
-            
-        #print(self.columnas_selecionadas)
+            messagebox.showerror(
+                message="Selecione una ruta valida de guardado", title="Error")
+        else:
+            try:
+                # si no hay errores, extraemos el prod que corresponda a la opcion escogida
+                tecnica_aplicada = self.tecnicas_anonimizacion.get(
+                    self.opcion_escogida.get())
+                
+                # coremos ese procedimiento
+                threading.Thread(target=tecnica_aplicada).start()
+                
+                self.ventana_carga = VentanaCarga()
+                self.ventana_carga.mostrar() 
+            except:
+                messagebox.showerror(
+                    message="El archivo esta en uso, cierrelo e intente de nuevo", title="Error")
 
     # prod que obtiene que columnas fueron seleccionadas
     def obtener_columnas_seleccionadas(self):
         self.columnas_selecionadas.clear()
-        
-        #recorremos todos los widgets hijos del frame principal de scroll
-        for child in self.scrollable_frame_columnas.winfo_children():
-            
-            #verificamos que los hijos sean de tipo CTkFrame, ya que dentro de este widget estan los checks
-            if isinstance(child, ctk.CTkFrame):
-                hijos = child.winfo_children() #para cada uno extraemos la lista de hijos
-                check = hijos[0] # los hijos de este Frame son [0=checkbox, 1=combobox], por ende nos interesa el 0
+        self.opciones_faker_seleccionadas.clear()
 
-                if check.get() == 1: #el metodo get() retorna 1 si el checkbox esta seleccionado
-                    self.columnas_selecionadas.append(check.cget("text")) #añadimos a la lista la columna, que se extrae del texto del check
-            
+        # recorremos todos los widgets hijos del frame principal de scroll
+        for child in self.scrollable_frame_columnas.winfo_children():
+
+            # verificamos que los hijos sean de tipo CTkFrame, ya que dentro de este widget estan los checks
+            if isinstance(child, ctk.CTkFrame):
+                hijos = child.winfo_children()  # para cada uno extraemos la lista de hijos
+                # los hijos de este Frame son [0=checkbox, 1=combobox], por ende nos interesa el 0
+                check = hijos[0]
+
+                if check.get() == 1:  # el metodo get() retorna 1 si el checkbox esta seleccionado
+                    # añadimos a la lista la columna, que se extrae del texto del check
+                    self.columnas_selecionadas.append(check.cget("text"))
+                    combobox = hijos[1]
+                    if combobox.cget("state") == "readonly":
+                        self.opciones_faker_seleccionadas.append(
+                            combobox.get())
+
+        print(self.opciones_faker_seleccionadas)
         if len(self.columnas_selecionadas) >= 1:
             return True
         else:
             return False
-    
+
     # prod que escoge la ruta de guardado
     def escoger_guardado(self):
         self.ruta_guardado = ""
@@ -343,34 +362,65 @@ class principal:
         if self.ruta_guardado:
             return True
         else:
-            return False        
+            return False
 
     # prod para eliminar columnas
     def eliminar_columnas(self):
-        
+
         data_frame_eliminacion = pd.DataFrame(self.dataframe)
 
         for columna in self.columnas_selecionadas:
             del data_frame_eliminacion[columna]
-            
-        
-        data_frame_eliminacion.to_excel(self.ruta_guardado, index=False) 
-        messagebox.showinfo(message="El archivo se ha guardado correctamente", title="Exito") 
-        
+
+        data_frame_eliminacion.to_excel(self.ruta_guardado, index=False)
+        messagebox.showinfo(
+            message="El archivo se ha guardado correctamente", title="Exito")
+
     # prod para eliminar columnas
     def encriptar_columnas(self):
         data_frame_encriptacion = pd.DataFrame(self.dataframe)
-        
+
         for columna in self.columnas_selecionadas:
-            data_frame_encriptacion[columna] = data_frame_encriptacion[columna].apply(lambda x: hs.sha256(str(x).encode()).hexdigest())
-        
-        data_frame_encriptacion.to_excel(self.ruta_guardado, index=False) 
-        messagebox.showinfo(message="El archivo se ha guardado correctamente", title="Exito")         
-        
+            data_frame_encriptacion[columna] = data_frame_encriptacion[columna].apply(
+                lambda x: hs.sha256(str(x).encode()).hexdigest())
+
+        data_frame_encriptacion.to_excel(self.ruta_guardado, index=False)
+        messagebox.showinfo(
+            message="El archivo se ha guardado correctamente", title="Exito")
+
     # prod para eliminar columnas
     def sustituir_columnas(self):
-        print("sustituir")
-        
+        fake = Faker()
+
+        funciones_fake = {
+            "Nombre": lambda: fake.first_name(),
+            "Apellido": lambda: fake.last_name(),
+            "Nombre Completo": lambda: fake.name(),
+            "Direccion": lambda: fake.address(),
+            "Correo": lambda: fake.email(),
+            "Identificacion": lambda: str(fake.unique.random_number(digits=13)),
+            "Telefono": lambda: fake.phone_number(),
+            "Ciudad": lambda: fake.city(),
+            "Pais": lambda: fake.country(),
+        }
+
+        data_frame_sustitucion = pd.DataFrame(self.dataframe)
+        i = 0
+
+        for columna in self.columnas_selecionadas:
+
+            metodo_aplicado = funciones_fake.get(
+                self.opciones_faker_seleccionadas[i])
+            data_frame_sustitucion[columna] = data_frame_sustitucion[columna].apply(
+                lambda x: metodo_aplicado())
+            i += 1
+
+        data_frame_sustitucion.to_excel(self.ruta_guardado, index=False)
+        self.ventana_carga.top.destroy()
+        messagebox.showinfo(
+            message="El archivo se ha guardado correctamente", title="Exito")
+
+          
 # clase que crea la pantalla de las vista previa de un archivo
 
 
@@ -457,3 +507,21 @@ class vistaPrevia:
     def regresar_principal(self):
         self.root.destroy()
         hm = principal(path=self.path)
+
+#clase de ventana de carga
+
+class VentanaCarga:
+    def __init__(self):
+        self.top = ctk.CTkToplevel()
+        self.top.title("Cargando...")
+        self.top.geometry("300x150")
+        self.top.resizable(False, False)
+        
+        self.label_cargando = ctk.CTkLabel(self.top, text="Cargando...", font=('Arial', 16))
+        self.label_cargando.pack(pady=20)
+        
+        self.barra_carga = ctk.CTkProgressBar(self.top, mode='indeterminate', width=200)
+        self.barra_carga.pack(pady=10)
+        
+    def mostrar(self):
+        self.top.wait_window()
