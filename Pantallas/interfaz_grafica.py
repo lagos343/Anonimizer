@@ -5,7 +5,8 @@ import threading
 import os
 import hashlib as hs
 from faker import Faker
-import time
+import concurrent.futures
+
 
 # configuraciones globales de la interfaz
 ctk.set_appearance_mode("System")
@@ -314,10 +315,21 @@ class principal:
                     self.opcion_escogida.get())
                 
                 # coremos ese procedimiento
-                threading.Thread(target=tecnica_aplicada).start()
+                # Creamos un Executor con ThreadPool
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    # Lanzamos la tarea en un hilo aparte
+                    future = executor.submit(tecnica_aplicada)
+
+                    # Mostramos la ventana de carga mientras se ejecuta la tarea
+                    self.ventana_carga = VentanaCarga()
+                    self.ventana_carga.mostrar()
+
+                    # Esperamos a que la tarea se complete
+                    result = future.result()
+
+                    # Cerramos la ventana de carga y realizamos cualquier otra acción necesaria
+                    self.ventana_carga.cerrar()
                 
-                self.ventana_carga = VentanaCarga()
-                self.ventana_carga.mostrar() 
             except:
                 messagebox.showerror(
                     message="El archivo esta en uso, cierrelo e intente de nuevo", title="Error")
