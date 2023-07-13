@@ -141,26 +141,29 @@ class principal:
         # cosas que iran dentro de este marco
         # titulo de la seccion
         ctk.CTkLabel(self.marco_prin_anonimizacion, text="Tecnica de Anonimizacion", width=580,
-                     anchor="w", padx="10", pady="20").grid(row=0, column=0, columnspan=3)
+                     anchor="w", padx="10", pady="10").grid(row=0, column=0, columnspan=3)
 
         # 1. opcion Eliminacion
         self.opcion_escogida = ctk.StringVar(value=None)
         self.radiobutton_eliminacion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Eliminar Columnas",
-                                                          variable=self.opcion_escogida, value="op1", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=0, padx="18", pady="15")
+                                                          variable=self.opcion_escogida, value="op1", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=0, padx="18", pady="10")
 
         # 2. opcion Encriptacion
         self.radiobutton_enriptacion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Encriptar Columnas",
-                                                          variable=self.opcion_escogida, value="op2", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=1, padx="18", pady="15")
+                                                          variable=self.opcion_escogida, value="op2", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=1, padx="18", pady="10")
 
         # 3. opcion Sustitucion
         self.radiobutton_sustitucion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Sustituir Columnas",
-                                                          variable=self.opcion_escogida, value="op3", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=2, padx="18", pady="15")
+                                                          variable=self.opcion_escogida, value="op3", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=2, padx="18", pady="10")
 
         # boton que guardara el nuevo archivo anonimizado
         self.boton_guardar_anonimizado = ctk.CTkButton(self.marco_prin_anonimizacion, text="Anonimizar y Guardar", command=lambda: self.empezar_annimizacion(
         ), width=560, state="normal")
         self.boton_guardar_anonimizado.grid(
-            row=4, column=0, columnspan=3, pady="20")
+            row=4, column=0, columnspan=3, pady="10")
+        
+        self.barra_carga = ctk.CTkProgressBar(self.root, mode='indeterminate', width=500)
+        self.barra_carga.pack(pady=10)
 
         # Objeto con los procedimientos que seran llamados dependiendo de cada tecnica escogida
         self.tecnicas_anonimizacion = {
@@ -318,10 +321,15 @@ class principal:
                 # Creamos un Executor con ThreadPool
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     # Lanzamos la tarea en un hilo aparte
-                    future = executor.submit(tecnica_aplicada)                                    
-
+                    future = executor.submit(tecnica_aplicada)  
+                                                      
+                    #barra de carga inicia 
+                    self.barra_carga.start()
+                    
                     # Esperamos a que la tarea se complete
-                    result = future.result()               
+                    result = future.result()     
+                    
+                    self.barra_carga.stop()          
                     
                 
             except:
