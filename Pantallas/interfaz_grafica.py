@@ -157,7 +157,7 @@ class principal:
                                                           variable=self.opcion_escogida, value="op3", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=2, padx="18", pady="15")
 
         # boton que guardara el nuevo archivo anonimizado
-        self.boton_guardar_anonimizado = ctk.CTkButton(self.marco_prin_anonimizacion, text="Guardar", command=lambda: self.empezar_annimizacion(
+        self.boton_guardar_anonimizado = ctk.CTkButton(self.marco_prin_anonimizacion, text="Anonimizar y Guardar", command=lambda: self.empezar_annimizacion(
         ), width=560, state="normal")
         self.boton_guardar_anonimizado.grid(
             row=4, column=0, columnspan=3, pady="20")
@@ -318,17 +318,11 @@ class principal:
                 # Creamos un Executor con ThreadPool
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     # Lanzamos la tarea en un hilo aparte
-                    future = executor.submit(tecnica_aplicada)
-
-                    # Mostramos la ventana de carga mientras se ejecuta la tarea
-                    self.ventana_carga = VentanaCarga()
-                    self.ventana_carga.mostrar()
+                    future = executor.submit(tecnica_aplicada)                                    
 
                     # Esperamos a que la tarea se complete
-                    result = future.result()
-
-                    # Cerramos la ventana de carga y realizamos cualquier otra acción necesaria
-                    self.ventana_carga.cerrar()
+                    result = future.result()               
+                    
                 
             except:
                 messagebox.showerror(
@@ -384,7 +378,7 @@ class principal:
         for columna in self.columnas_selecionadas:
             del data_frame_eliminacion[columna]
 
-        data_frame_eliminacion.to_excel(self.ruta_guardado, index=False)
+        data_frame_eliminacion.to_excel(self.ruta_guardado, index=False)        
         messagebox.showinfo(
             message="El archivo se ha guardado correctamente", title="Exito")
 
@@ -396,7 +390,7 @@ class principal:
             data_frame_encriptacion[columna] = data_frame_encriptacion[columna].apply(
                 lambda x: hs.sha256(str(x).encode()).hexdigest())
 
-        data_frame_encriptacion.to_excel(self.ruta_guardado, index=False)
+        data_frame_encriptacion.to_excel(self.ruta_guardado, index=False)        
         messagebox.showinfo(
             message="El archivo se ha guardado correctamente", title="Exito")
 
@@ -428,7 +422,6 @@ class principal:
             i += 1
 
         data_frame_sustitucion.to_excel(self.ruta_guardado, index=False)
-        self.ventana_carga.top.destroy()
         messagebox.showinfo(
             message="El archivo se ha guardado correctamente", title="Exito")
 
@@ -520,20 +513,4 @@ class vistaPrevia:
         self.root.destroy()
         hm = principal(path=self.path)
 
-#clase de ventana de carga
 
-class VentanaCarga:
-    def __init__(self):
-        self.top = ctk.CTkToplevel()
-        self.top.title("Cargando...")
-        self.top.geometry("300x150")
-        self.top.resizable(False, False)
-        
-        self.label_cargando = ctk.CTkLabel(self.top, text="Cargando...", font=('Arial', 16))
-        self.label_cargando.pack(pady=20)
-        
-        self.barra_carga = ctk.CTkProgressBar(self.top, mode='indeterminate', width=200)
-        self.barra_carga.pack(pady=10)
-        
-    def mostrar(self):
-        self.top.wait_window()
