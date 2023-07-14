@@ -5,7 +5,7 @@ import threading
 import os
 import hashlib as hs
 from faker import Faker
-import concurrent.futures
+from joblib import Parallel, delayed
 
 
 # configuraciones globales de la interfaz
@@ -157,8 +157,7 @@ class principal:
                                                           variable=self.opcion_escogida, value="op3", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=2, padx="18", pady="10")
 
         # boton que guardara el nuevo archivo anonimizado
-        self.boton_guardar_anonimizado = ctk.CTkButton(self.marco_prin_anonimizacion, text="Anonimizar y Guardar", command=lambda: self.empezar_annimizacion(
-        ), width=560, state="normal")
+        self.boton_guardar_anonimizado = ctk.CTkButton(self.marco_prin_anonimizacion, text="Anonimizar y Guardar", command=lambda: threading.Thread(target=self.empezar_annimizacion).start(), width=560, state="normal")
         self.boton_guardar_anonimizado.grid(
             row=4, column=0, columnspan=3, pady="10")
         
@@ -315,23 +314,11 @@ class principal:
             try:
                 # si no hay errores, extraemos el prod que corresponda a la opcion escogida
                 tecnica_aplicada = self.tecnicas_anonimizacion.get(
-                    self.opcion_escogida.get())
+                    self.opcion_escogida.get())                  
                 
-                # coremos ese procedimiento
-                # Creamos un Executor con ThreadPool
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    # Lanzamos la tarea en un hilo aparte
-                    future = executor.submit(tecnica_aplicada)  
-                                                      
-                    #barra de carga inicia 
-                    self.barra_carga.start()
-                    
-                    # Esperamos a que la tarea se complete
-                    result = future.result()     
-                    
-                    self.barra_carga.stop()          
-                    
-                
+                #ejecutamos la tecnica
+                tecnica_aplicada()                                        
+                                                                                                                                                                      
             except:
                 messagebox.showerror(
                     message="El archivo esta en uso, cierrelo e intente de nuevo", title="Error")
@@ -380,7 +367,7 @@ class principal:
 
     # prod para eliminar columnas
     def eliminar_columnas(self):
-
+        
         data_frame_eliminacion = pd.DataFrame(self.dataframe)
 
         for columna in self.columnas_selecionadas:
@@ -389,9 +376,12 @@ class principal:
         data_frame_eliminacion.to_excel(self.ruta_guardado, index=False)        
         messagebox.showinfo(
             message="El archivo se ha guardado correctamente", title="Exito")
+        
+        self.barra_carga.stop()
 
     # prod para eliminar columnas
     def encriptar_columnas(self):
+        
         data_frame_encriptacion = pd.DataFrame(self.dataframe)
 
         for columna in self.columnas_selecionadas:
@@ -401,9 +391,12 @@ class principal:
         data_frame_encriptacion.to_excel(self.ruta_guardado, index=False)        
         messagebox.showinfo(
             message="El archivo se ha guardado correctamente", title="Exito")
+        
+        self.barra_carga.stop()
 
     # prod para eliminar columnas
     def sustituir_columnas(self):
+        
         fake = Faker()
 
         funciones_fake = {
@@ -432,6 +425,8 @@ class principal:
         data_frame_sustitucion.to_excel(self.ruta_guardado, index=False)
         messagebox.showinfo(
             message="El archivo se ha guardado correctamente", title="Exito")
+        
+        self.barra_carga.stop()
 
           
 # clase que crea la pantalla de las vista previa de un archivo

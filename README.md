@@ -21,6 +21,14 @@ pip install pandas
 pip install openpyxl
 ```
 
+<!-- To the job has been executed of async form, use joblib 
+
+Install the library from the terminal with the following command.
+
+```sh
+pip install joblib
+``` -->
+
 Finaly, for generate fake information for anonimizated columns requires [Faker](https://faker.readthedocs.io/en/master/)
 
 Install the librarys from the terminal with the following command.
@@ -28,3 +36,5 @@ Install the librarys from the terminal with the following command.
 ```sh
 pip install Faker
 ```
+
+
