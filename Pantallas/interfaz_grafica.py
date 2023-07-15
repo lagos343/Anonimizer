@@ -137,32 +137,29 @@ class principal:
         self.marco_op_anonimizacion = ctk.CTkFrame(
             self.marco_prin_anonimizacion, width=560)
         self.marco_op_anonimizacion.grid(
-            padx="10", row=1, column=0, columnspan=3)
+            padx="15", row=1, column=0, columnspan=3)
         # cosas que iran dentro de este marco
         # titulo de la seccion
         ctk.CTkLabel(self.marco_prin_anonimizacion, text="Tecnica de Anonimizacion", width=580,
-                     anchor="w", padx="10", pady="10").grid(row=0, column=0, columnspan=3)
+                     anchor="w", padx="10", pady="15").grid(row=0, column=0, columnspan=3)
 
         # 1. opcion Eliminacion
         self.opcion_escogida = ctk.StringVar(value=None)
         self.radiobutton_eliminacion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Eliminar Columnas",
-                                                          variable=self.opcion_escogida, value="op1", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=0, padx="18", pady="10")
+                                                          variable=self.opcion_escogida, value="op1", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=0, padx="18", pady="15")
 
         # 2. opcion Encriptacion
         self.radiobutton_enriptacion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Encriptar Columnas",
-                                                          variable=self.opcion_escogida, value="op2", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=1, padx="18", pady="10")
+                                                          variable=self.opcion_escogida, value="op2", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=1, padx="18", pady="15")
 
         # 3. opcion Sustitucion
         self.radiobutton_sustitucion = ctk.CTkRadioButton(self.marco_op_anonimizacion, text="Sustituir Columnas",
-                                                          variable=self.opcion_escogida, value="op3", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=2, padx="18", pady="10")
+                                                          variable=self.opcion_escogida, value="op3", width=150, command=lambda: self.operaciones_combobox()).grid(row=1, column=2, padx="18", pady="15")
 
         # boton que guardara el nuevo archivo anonimizado
         self.boton_guardar_anonimizado = ctk.CTkButton(self.marco_prin_anonimizacion, text="Anonimizar y Guardar", command=lambda: threading.Thread(target=self.empezar_annimizacion).start(), width=560, state="normal")
         self.boton_guardar_anonimizado.grid(
-            row=4, column=0, columnspan=3, pady="10")
-        
-        self.barra_carga = ctk.CTkProgressBar(self.root, mode='indeterminate', width=500)
-        self.barra_carga.pack(pady=10)
+            row=4, column=0, columnspan=3, pady="15")              
 
         # Objeto con los procedimientos que seran llamados dependiendo de cada tecnica escogida
         self.tecnicas_anonimizacion = {
@@ -183,11 +180,11 @@ class principal:
 
     # abrir dialogo
     def abrir_archivo(self):
-        archivo = filedialog.askopenfilename(title="Buscar Archivo")
+        archivo = filedialog.askopenfilename(title="Buscar Archivo",filetypes=[("Archivos de Excel", ".xlsx .xls")])
         if archivo != "" and archivo != None:
             self.limpiar_ruta()
             self.entrada.configure(state="normal")
-            self.entrada.insert(0, archivo)
+            self.entrada.insert(0, archivo)            
             self.escoger_archivo()
             self.generar_checkboxes()
             self.operaciones_combobox()
@@ -201,6 +198,7 @@ class principal:
     # prod para escoger el archivo
     def escoger_archivo(self):
         self.path = self.entrada.get()
+        self.label_resul_archivo.configure(state="normal", text="Cargando.........", text_color="yellow")
 
         if (self.path == None or self.path == ""):
             self.label_resul_archivo.configure(
@@ -228,7 +226,7 @@ class principal:
                 self.nombres_columnas.clear()
                 self.limpiar_ruta()
                 self.label_resul_archivo.configure(
-                    text="El archivo indicado no es de formato excel", text_color="red")
+                    text="Hubo un problema al intentar abrir el archivo", text_color="red")
                 self.entrada.focus()
                 self.boton_vista_previa.configure(state="disabled")
 
@@ -314,14 +312,20 @@ class principal:
             try:
                 # si no hay errores, extraemos el prod que corresponda a la opcion escogida
                 tecnica_aplicada = self.tecnicas_anonimizacion.get(
-                    self.opcion_escogida.get())                  
+                    self.opcion_escogida.get()) 
+                
+                self.boton_guardar_anonimizado.configure(text="Guardando.....")                     
                 
                 #ejecutamos la tecnica
-                tecnica_aplicada()                                        
+                tecnica_aplicada()  
+                
+                self.boton_guardar_anonimizado.configure(text="Anonimizar y Guardar")                                       
                                                                                                                                                                       
             except:
                 messagebox.showerror(
                     message="El archivo esta en uso, cierrelo e intente de nuevo", title="Error")
+                
+            self.boton_guardar_anonimizado.configure(text="Anonimizar y Guardar")     
 
     # prod que obtiene que columnas fueron seleccionadas
     def obtener_columnas_seleccionadas(self):
@@ -373,11 +377,13 @@ class principal:
         for columna in self.columnas_selecionadas:
             del data_frame_eliminacion[columna]
 
-        data_frame_eliminacion.to_excel(self.ruta_guardado, index=False)        
-        messagebox.showinfo(
-            message="El archivo se ha guardado correctamente", title="Exito")
+        data_frame_eliminacion.to_excel(self.ruta_guardado, index=False)
+                
+        abrir = messagebox.askquestion(
+            message="El archivo se ha guardado correctamente, ¿Desea Abrirlo?", title="Exito")
         
-        self.barra_carga.stop()
+        if abrir == "yes":
+            os.startfile(self.ruta_guardado)
 
     # prod para eliminar columnas
     def encriptar_columnas(self):
@@ -389,11 +395,11 @@ class principal:
                 lambda x: hs.sha256(str(x).encode()).hexdigest())
 
         data_frame_encriptacion.to_excel(self.ruta_guardado, index=False)        
-        messagebox.showinfo(
-            message="El archivo se ha guardado correctamente", title="Exito")
+        abrir = messagebox.askquestion(
+            message="El archivo se ha guardado correctamente, ¿Desea Abrirlo?", title="Exito")
         
-        self.barra_carga.stop()
-
+        if abrir == "yes":
+            os.startfile(self.ruta_guardado)
     # prod para eliminar columnas
     def sustituir_columnas(self):
         
@@ -423,11 +429,11 @@ class principal:
             i += 1
 
         data_frame_sustitucion.to_excel(self.ruta_guardado, index=False)
-        messagebox.showinfo(
-            message="El archivo se ha guardado correctamente", title="Exito")
+        abrir = messagebox.askquestion(
+            message="El archivo se ha guardado correctamente, ¿Desea Abrirlo?", title="Exito")
         
-        self.barra_carga.stop()
-
+        if abrir == "yes":
+            os.startfile(self.ruta_guardado)
           
 # clase que crea la pantalla de las vista previa de un archivo
 
