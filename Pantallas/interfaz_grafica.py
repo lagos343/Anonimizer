@@ -5,7 +5,6 @@ import threading
 import os
 import hashlib as hs
 from faker import Faker
-from joblib import Parallel, delayed
 
 
 # configuraciones globales de la interfaz
